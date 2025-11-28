@@ -15,7 +15,9 @@ public class DocWatcherContext : DbContext
     {
         if (!optionsBuilder.IsConfigured)
         {
-            var dbPath = Path.Combine(AppContext.BaseDirectory, "docwatcher.db");
+			//Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
+
+			var dbPath = Path.Combine(AppContext.BaseDirectory, "docwatcher.db");
             optionsBuilder.UseSqlite($"Data Source={dbPath}");
         }
     }
