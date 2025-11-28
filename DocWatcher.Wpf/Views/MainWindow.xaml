@@ -1,0 +1,121 @@
+﻿<Window x:Class="DocWatcher.Wpf.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:DocWatcher.Wpf.Views"
+        mc:Ignorable="d"
+        Title="DocWatcher"
+        Height="600"
+        Width="1000"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Menu -->
+            <RowDefinition Height="*"/>
+            <!-- Contenuto -->
+        </Grid.RowDefinitions>
+
+        <!-- MENU IN ALTO -->
+        <Menu Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Importa CSV..."
+                          Click="ImportCsv_Click"/>
+                <MenuItem Header="_Esporta CSV..."
+                          Click="ExportCsv_Click"/>
+            </MenuItem>
+            <MenuItem Header="_Impostazioni">
+                <MenuItem Header="_Notifiche..."
+                          Click="NotificationSettings_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <!-- CONTENUTO PRINCIPALE -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" MinWidth="300"/>
+                <!-- sinistra: griglia -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- splitter -->
+                <ColumnDefinition Width="2*" MinWidth="250"/>
+                <!-- destra: dettaglio -->
+            </Grid.ColumnDefinitions>
+
+            <!-- COLONNA SINISTRA: GRID + BOTTONE AGGIUNTA -->
+            <DockPanel Grid.Column="0" Margin="8">
+                <StackPanel DockPanel.Dock="Top"
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            Margin="0,0,0,8">
+                    <Button x:Name="BtnAddSingle"
+                            Content="Nuovo documento..."
+                            Padding="12,4"
+                            Click="AddSingle_Click"/>
+                </StackPanel>
+
+                <views:DocumentGridPanel x:Name="GridPanel"
+                                         DockPanel.Dock="Bottom" />
+            </DockPanel>
+
+            <!-- SPLITTER RIDIMENSIONABILE -->
+            <GridSplitter Grid.Column="1"
+                          Width="5"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Stretch"
+                          Background="Transparent"
+                          ShowsPreview="True"/>
+
+            <!-- COLONNA DESTRA: DETTAGLIO -->
+            <Grid Grid.Column="2" Margin="8">
+                <!-- Pannello "nessuna selezione" -->
+                <Border x:Name="EmptyPanel"
+                        BorderThickness="1"
+                        BorderBrush="#CCC"
+                        CornerRadius="4"
+                        Padding="16"
+                        Background="#FFF">
+                    <TextBlock Text="Seleziona un documento dalla lista a sinistra."
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Foreground="#666"
+                               FontSize="14"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"/>
+                </Border>
+
+                <!-- Pannello di visualizzazione -->
+                <views:DocumentViewPanel x:Name="ViewPanel"
+                                         Visibility="Collapsed"/>
+
+                <!-- Pannello di modifica -->
+                <views:DocumentEditPanel x:Name="EditPanel"
+                                         Visibility="Collapsed"/>
+            </Grid>
+
+            <!-- OVERLAY DI CARICAMENTO -->
+            <Grid x:Name="LoadingOverlay"
+                  Grid.ColumnSpan="3"
+                  Background="#80000000"
+                  Visibility="Collapsed"
+                  Panel.ZIndex="99">
+                <Border Background="White"
+                        CornerRadius="6"
+                        Padding="16"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal"
+                                VerticalAlignment="Center">
+                        <TextBlock Text="Caricamento..."
+                                   Margin="0,0,8,0"
+                                   VerticalAlignment="Center"/>
+                        <ProgressBar IsIndeterminate="True"
+                                     Width="120"
+                                     Height="16"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

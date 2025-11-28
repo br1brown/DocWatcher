@@ -1,0 +1,102 @@
+﻿<UserControl x:Class="DocWatcher.Wpf.Views.DocumentGridPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             d:DesignHeight="400"
+             d:DesignWidth="450">
+
+    <UserControl.Resources>
+        <!-- Stile per il bottone "Cerca" -->
+        <Style x:Key="SearchButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="Margin" Value="10,0,0,0"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Filtri -->
+            <RowDefinition Height="*"/>
+            <!-- Griglia -->
+        </Grid.RowDefinitions>
+
+        <!-- FILTRI -->
+        <!-- FILTRI -->
+        <GroupBox Header="Filtri" Grid.Row="0" Padding="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Riga 0: combo tipo filtro -->
+                <ComboBox x:Name="CmbFilterType"
+                  Grid.Row="0"
+                  Grid.Column="0"
+                  SelectedIndex="0"
+                  MinWidth="220"
+                  SelectionChanged="CmbFilterType_SelectionChanged">
+                    <ComboBoxItem Content="Documenti in scadenza" Tag="expiring" />
+                    <ComboBoxItem Content="Documenti scaduti" Tag="expired" />
+                    <ComboBoxItem Content="Tutti i documenti" Tag="all" />
+                </ComboBox>
+
+                <!-- Riga 1: filtro giorni (visibile solo per "in scadenza") -->
+                <!-- Riga 1: filtro giorni + bottone cerca -->
+                <StackPanel x:Name="DaysFilterPanel"
+            Grid.Row="1" Grid.Column="0"
+            Orientation="Horizontal"
+            Margin="0,10,0,0">
+                    <TextBlock Text="Entro"
+               VerticalAlignment="Center"
+               Margin="0,0,4,0"/>
+                    <TextBox x:Name="TxtDaysFilter"
+             Width="50"
+             HorizontalContentAlignment="Center"
+             PreviewTextInput="TxtDaysFilter_PreviewTextInput" />
+                    <TextBlock Text="giorni"
+               VerticalAlignment="Center"
+               Margin="4,0,0,0" />
+                </StackPanel>
+                <!-- Bottone cerca -->
+                <Button x:Name="BtnSearch"
+                Grid.Row="1"
+                Grid.Column="1"
+                Content="Cerca"
+                Style="{StaticResource SearchButtonStyle}"
+                Click="BtnSearch_Click" />
+            </Grid>
+        </GroupBox>
+        <!-- GRIGLIA DOCUMENTI -->
+        <GroupBox Header="Documenti" Grid.Row="1" Margin="0,8,0,0" Padding="5">
+            <DataGrid x:Name="DocumentsGrid"
+                      AutoGenerateColumns="False"
+                      IsReadOnly="True"
+                      CanUserAddRows="False"
+                      SelectionMode="Single"
+                      ItemsSource="{Binding ItemsSource,
+                                            RelativeSource={RelativeSource AncestorType=UserControl}}"
+                      SelectedItem="{Binding SelectedItem,
+                                             RelativeSource={RelativeSource AncestorType=UserControl},
+                                             Mode=TwoWay}"
+                      SelectionChanged="DocumentsGrid_SelectionChanged">
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Titolo"
+                                        Binding="{Binding Titolo}"
+                                        Width="*" />
+                    <DataGridTextColumn Header="Scadenza"
+                                        Binding="{Binding DataScadenza, StringFormat=dd/MM/yyyy}"
+                                        Width="150" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+    </Grid>
+</UserControl>
