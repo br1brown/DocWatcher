@@ -108,10 +108,11 @@
                    Margin="0,8,0,0">
 
             <!-- Elimina a sinistra -->
-            <Button Content="Elimina"
-                    Style="{StaticResource DangerButtonStyle}"
-                    Click="Delete_Click"
-                    DockPanel.Dock="Left"/>
+            <Button x:Name="btnElimina"
+                Content="Elimina"
+                Style="{StaticResource DangerButtonStyle}"
+                Click="Delete_Click"
+                DockPanel.Dock="Left"/>
 
             <!-- Salva / Annulla a destra -->
             <StackPanel Orientation="Horizontal"

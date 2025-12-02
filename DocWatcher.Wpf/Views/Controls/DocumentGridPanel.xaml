@@ -23,57 +23,15 @@
             <!-- Griglia -->
         </Grid.RowDefinitions>
 
-        <!-- FILTRI -->
-        <!-- FILTRI -->
-        <GroupBox Header="Filtri" Grid.Row="0" Padding="10">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+        <ComboBox x:Name="CmbFilterType"
+            Grid.Row="0"
+            Grid.Column="0"
+            SelectedIndex="0"
+            MinWidth="220" Width="Auto" VerticalContentAlignment="Center" SelectionChanged="BtnSearch_Click" />
 
-                <!-- Riga 0: combo tipo filtro -->
-                <ComboBox x:Name="CmbFilterType"
-                  Grid.Row="0"
-                  Grid.Column="0"
-                  SelectedIndex="0"
-                  MinWidth="220"
-                  SelectionChanged="CmbFilterType_SelectionChanged">
-                    <ComboBoxItem Content="Documenti in scadenza" Tag="expiring" />
-                    <ComboBoxItem Content="Documenti scaduti" Tag="expired" />
-                    <ComboBoxItem Content="Tutti i documenti" Tag="all" />
-                </ComboBox>
-
-                <!-- Riga 1: filtro giorni (visibile solo per "in scadenza") -->
-                <!-- Riga 1: filtro giorni + bottone cerca -->
-                <StackPanel x:Name="DaysFilterPanel"
-            Grid.Row="1" Grid.Column="0"
-            Orientation="Horizontal"
-            Margin="0,10,0,0">
-                    <TextBlock Text="Entro"
-               VerticalAlignment="Center"
-               Margin="0,0,4,0"/>
-                    <TextBox x:Name="TxtDaysFilter"
-             Width="50"
-             HorizontalContentAlignment="Center"
-             PreviewTextInput="TxtDaysFilter_PreviewTextInput" />
-                    <TextBlock Text="giorni"
-               VerticalAlignment="Center"
-               Margin="4,0,0,0" />
-                </StackPanel>
-                <!-- Bottone cerca -->
-                <Button x:Name="BtnSearch"
-                Grid.Row="1"
-                Grid.Column="1"
-                Content="Cerca"
-                Style="{StaticResource SearchButtonStyle}"
-                Click="BtnSearch_Click" />
-            </Grid>
+        <GroupBox Header="Documenti" Grid.Row="1" Margin="0,8,0,0" Padding="5">
         </GroupBox>
+
         <!-- GRIGLIA DOCUMENTI -->
         <GroupBox Header="Documenti" Grid.Row="1" Margin="0,8,0,0" Padding="5">
             <DataGrid x:Name="DocumentsGrid"

@@ -11,15 +11,24 @@ public class DocWatcherContext : DbContext
     {
     }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        if (!optionsBuilder.IsConfigured)
-        {
-			//Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)
+	protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+	{
+		if (!optionsBuilder.IsConfigured)
+		{
+			var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+			var dbFolder = Path.Combine(appData, "DocWatcher", "Data");
+			Directory.CreateDirectory(dbFolder);
 
-			var dbPath = Path.Combine(AppContext.BaseDirectory, "docwatcher.db");
-            optionsBuilder.UseSqlite($"Data Source={dbPath}");
-        }
-    }
+#if DEBUG
+			var dbName = "docwatcher-dev.db";
+#else
+        var dbName = "docwatcher.db";
+#endif
+
+			var dbPath = Path.Combine(dbFolder, dbName);
+			optionsBuilder.UseSqlite($"Data Source={dbPath}");
+		}
+	}
+
 
 }

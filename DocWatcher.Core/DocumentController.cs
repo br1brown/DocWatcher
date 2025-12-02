@@ -2,10 +2,6 @@ using DocWatcher.Core.Data;
 using DocWatcher.Core.Dtos;
 using DocWatcher.Core.Models;
 using DocWatcher.Core.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace DocWatcher.Core;
 

@@ -1,0 +1,117 @@
+﻿<Window x:Class="DocWatcher.Wpf.Views.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Impostazioni"
+        Width="520"
+        Height="400"
+        MinWidth="480"
+        MinHeight="360"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="CanResize">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- CONTENUTO PRINCIPALE: TAB CONTROL -->
+        <TabControl Grid.Row="0" Margin="0,0,0,10">
+
+            <!-- =================== TAB 1: IMPOSTAZIONI =================== -->
+            <TabItem Header="Impostazioni">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10">
+
+                        <!-- GRUPPO FILTRI -->
+                        <GroupBox Header="Filtri" Margin="0,0,0,10" Padding="10">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,0"
+                                           Text="Mostra i documenti che scadono entro (X) giorni:" />
+                                <TextBox x:Name="TxtFilterDays"
+                                         Grid.Row="0" Grid.Column="1"
+                                         MinWidth="80"
+                                         HorizontalAlignment="Left" />
+                            </Grid>
+                        </GroupBox>
+
+                        <!-- GRUPPO NOTIFICHE -->
+                        <GroupBox Header="Notifiche" Padding="10">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Giorni per il range di notifica -->
+                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                           VerticalAlignment="Center"
+                                           Margin="0,0,10,8"
+                                           Text="Giorni per notifiche:" />
+                                <TextBox x:Name="TxtNotifySpanDays"
+                                         Grid.Row="0" Grid.Column="1"
+                                         MinWidth="80"
+                                         Margin="0,0,0,8"
+                                         HorizontalAlignment="Left" />
+
+                                <!-- Notifiche all'avvio -->
+                                <CheckBox x:Name="ChkNotifyAlwaysOnStartup"
+                                          Grid.Row="1" Grid.Column="0"
+                                          Grid.ColumnSpan="2"
+                                          Margin="0,0,0,8"
+                                          Content="Mostra notifiche all'avvio del programma" />
+
+                                <!-- Avvio in background -->
+                                <CheckBox x:Name="ChkBGStartup"
+                                          Grid.Row="2" Grid.Column="0"
+                                          Grid.ColumnSpan="2"
+                                          Content="Avvisa automaticamente quando accendo il computer" />
+                            </Grid>
+                        </GroupBox>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- =================== TAB 2: INFO =================== -->
+            <TabItem Header="Info">
+                <Grid Margin="10">
+                    <WebBrowser x:Name="BrowserInfo" />
+                </Grid>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- BARRA BOTTONI IN BASSO -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <Button x:Name="BtnOk"
+                    Width="90"
+                    Margin="4,0,0,0"
+                    Content="OK"
+                    IsDefault="True"
+                    Click="BtnOk_Click" />
+            <Button x:Name="BtnCancel"
+                    Width="90"
+                    Margin="4,0,0,0"
+                    Content="Annulla"
+                    IsCancel="True" />
+        </StackPanel>
+    </Grid>
+</Window>

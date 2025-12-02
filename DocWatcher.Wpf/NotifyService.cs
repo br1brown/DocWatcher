@@ -28,7 +28,7 @@ public class NotifyService
 
 	private void ShowNotification(int count)
 	{
-		int giorni = _config.NotifySpanDays;
+		int giorni = _config.FilterDays;
 
 		new ToastContentBuilder()
 			//.AddAudio()

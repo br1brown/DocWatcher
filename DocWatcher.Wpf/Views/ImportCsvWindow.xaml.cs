@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using DocWatcher.Core;
-using DocWatcher.Core.Dtos;
 using DocWatcher.Wpf.Helpers;
 
 namespace DocWatcher.Wpf.Views;

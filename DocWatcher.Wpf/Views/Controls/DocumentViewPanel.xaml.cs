@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Controls;
+using System;
+using System.IO;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace DocWatcher.Wpf.Views
 {
@@ -13,7 +17,10 @@ namespace DocWatcher.Wpf.Views
 		public DocumentViewPanel()
 		{
 			InitializeComponent();
+
+			UpdateFileUi();
 		}
+
 
 		// ==============================
 		//   DEPENDENCY PROPERTIES
@@ -46,8 +53,11 @@ namespace DocWatcher.Wpf.Views
 		}
 
 		public static readonly DependencyProperty FilePathProperty =
-			DependencyProperty.Register(nameof(FilePath), typeof(string),
-				typeof(DocumentViewPanel), new PropertyMetadata(string.Empty));
+			DependencyProperty.Register(
+				nameof(FilePath),
+				typeof(string),
+				typeof(DocumentViewPanel),
+				new PropertyMetadata(string.Empty, OnFilePathChanged));
 
 		public string? Status
 		{
@@ -81,5 +91,25 @@ namespace DocWatcher.Wpf.Views
 		{
 			DeleteRequested?.Invoke(this, EventArgs.Empty);
 		}
+		private static void OnFilePathChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		{
+			var control = (DocumentViewPanel)d;
+			control.UpdateFileUi();
+		}
+
+		private void UpdateFileUi()
+		{
+			var notnull = !string.IsNullOrWhiteSpace(FilePath);
+
+			FileLabel.Visibility = notnull ? Visibility.Visible : Visibility.Collapsed;
+			FileTextBlock.Visibility = notnull ? Visibility.Visible : Visibility.Collapsed;
+			OpenFileButton.Visibility = notnull ? Visibility.Visible : Visibility.Collapsed;
+
+			if (notnull)
+				OpenFileButton.IsEnabled = File.Exists(FilePath);
+			else
+				OpenFileButton.IsEnabled = false;
+		}
+
 	}
 }

@@ -7,9 +7,20 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.1.2" />
+    <PackageReference Include="Markdig" Version="0.44.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\DocWatcher.Core\DocWatcher.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\manuale.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\manuale.md">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
   </ItemGroup>
 </Project>

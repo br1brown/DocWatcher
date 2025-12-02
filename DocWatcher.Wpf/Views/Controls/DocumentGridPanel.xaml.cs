@@ -5,6 +5,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.ComponentModel;
 
 namespace DocWatcher.Wpf.Views
 {
@@ -29,16 +30,51 @@ namespace DocWatcher.Wpf.Views
 
 	public partial class DocumentGridPanel : UserControl
 	{
+		// valore di default nel caso in cui nessuno lo imposti da fuori
+		private int _expiringDays = 30;
+
+
 		public DocumentGridPanel()
 		{
 			InitializeComponent();
+			BuildFilterComboItems(DocumentGridFilterMode.Expiring);
 
-			// Gestione incolla per il filtro giorni
-			DataObject.AddPastingHandler(TxtDaysFilter, OnDaysFilterPaste);
+		}
+		private void BuildFilterComboItems(DocumentGridFilterMode? selectedMode = null)
+		{
+			if (CmbFilterType == null)
+				return;
 
-			// Imposta la visibilità iniziale del filtro giorni
-			// (dato che SelectedIndex="0" è "Documenti in scadenza")
-			DaysFilterPanel.Visibility = Visibility.Visible;
+			if (selectedMode == null)
+				selectedMode = CmbFilterType.SelectedValue as DocumentGridFilterMode?;
+
+			CmbFilterType.ItemsSource = new[]
+			{
+				new {
+					Text  = $"Documenti in scadenza entro {_expiringDays} giorni",
+					Value = DocumentGridFilterMode.Expiring
+				},
+				new {
+					Text  = "Documenti scaduti",
+					Value = DocumentGridFilterMode.Expired
+				},
+				new {
+					Text  = "Tutti i documenti",
+					Value = DocumentGridFilterMode.All
+				}
+			};
+
+			CmbFilterType.DisplayMemberPath = "Text";
+			CmbFilterType.SelectedValuePath = "Value";
+
+			if (selectedMode.HasValue)
+			{
+				CmbFilterType.SelectedValue = selectedMode.Value;
+			}
+			else
+			{
+				CmbFilterType.SelectedValue = DocumentGridFilterMode.Expiring;
+			}
 		}
 
 		// ==============================
@@ -78,31 +114,18 @@ namespace DocWatcher.Wpf.Views
 				typeof(DocumentGridPanel),
 				new PropertyMetadata(null));
 
-		/// <summary>
-		/// Valore di default per il filtro giorni (es. preso da AppConfig).
-		/// </summary>
-		public int DefaultDaysFilter
-		{
-			get => (int)GetValue(DefaultDaysFilterProperty);
-			set => SetValue(DefaultDaysFilterProperty, value);
-		}
 
-		public static readonly DependencyProperty DefaultDaysFilterProperty =
-			DependencyProperty.Register(
-				nameof(DefaultDaysFilter),
-				typeof(int),
-				typeof(DocumentGridPanel),
-				new PropertyMetadata(30, OnDefaultDaysFilterChanged));
-
-		private static void OnDefaultDaysFilterChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+		public int CurrentDaysFilter
 		{
-			if (d is DocumentGridPanel panel && panel.TxtDaysFilter != null)
+			get => _expiringDays;
+			set
 			{
-				var def = (int)e.NewValue;
-				def = Math.Clamp(def, 1, 600);
-				panel.TxtDaysFilter.Text = def.ToString();
+				_expiringDays = Math.Abs(value);
+				if (CmbFilterType != null)
+					BuildFilterComboItems(GetCurrentFilterMode());
 			}
 		}
+
 
 		// ==============================
 		//   EVENTI VERSO L'ESTERNO
@@ -115,51 +138,8 @@ namespace DocWatcher.Wpf.Views
 
 		/// <summary>
 		/// Notifica che è cambiata la selezione nella griglia.
-		/// La MainWindow può leggere SelectedItem.
 		/// </summary>
 		public event EventHandler? SelectionChanged;
-
-		// ==============================
-		//   LOGICA FILTRO GIORNI
-		// ==============================
-
-		// Solo numeri in input
-		private void TxtDaysFilter_PreviewTextInput(object sender, TextCompositionEventArgs e)
-		{
-			e.Handled = !e.Text.All(char.IsDigit);
-		}
-
-		// Gestione incolla
-		private void OnDaysFilterPaste(object sender, DataObjectPastingEventArgs e)
-		{
-			if (e.DataObject.GetDataPresent(DataFormats.Text))
-			{
-				var text = (string)e.DataObject.GetData(DataFormats.Text);
-				if (!text.All(char.IsDigit))
-					e.CancelCommand();
-			}
-			else
-			{
-				e.CancelCommand();
-			}
-		}
-
-		private int GetDaysFilter()
-		{
-			var def = Math.Clamp(DefaultDaysFilter <= 0 ? 30 : DefaultDaysFilter, 1, 600);
-
-			if (int.TryParse(TxtDaysFilter.Text, out var days))
-			{
-				if (days < 1) days = 1;
-				if (days > 600) days = 600;
-
-				TxtDaysFilter.Text = days.ToString();
-				return days;
-			}
-
-			TxtDaysFilter.Text = def.ToString();
-			return def;
-		}
 
 		// ==============================
 		//   LOGICA FILTRO TIPO
@@ -167,22 +147,13 @@ namespace DocWatcher.Wpf.Views
 
 		private DocumentGridFilterMode GetCurrentFilterMode()
 		{
-			if (CmbFilterType.SelectedItem is ComboBoxItem item)
-			{
-				var tag = item.Tag?.ToString() ?? "all";
-
-				return tag.ToLower() switch
-				{
-					"expiring" => DocumentGridFilterMode.Expiring,
-					"expired" => DocumentGridFilterMode.Expired,
-					"all" => DocumentGridFilterMode.All,
-					_ => DocumentGridFilterMode.All
-				};
-			}
+			if (CmbFilterType.SelectedValue is DocumentGridFilterMode mode)
+				return mode;
 
 			// fallback
 			return DocumentGridFilterMode.All;
 		}
+
 
 		// ==============================
 		//   HANDLER PULSANTE CERCA
@@ -193,34 +164,15 @@ namespace DocWatcher.Wpf.Views
 			RaiseSearchRequested();
 		}
 
-		private void CmbFilterType_SelectionChanged(object sender, SelectionChangedEventArgs e)
-		{
-			if (!IsLoaded)
-				return;
-
-			if (CmbFilterType.SelectedItem is ComboBoxItem item)
-			{
-				var tag = item.Tag?.ToString() ?? "all";
-
-				if (DaysFilterPanel != null)
-				{
-					// Mostra il filtro giorni solo per "Documenti in scadenza"
-					DaysFilterPanel.Visibility = tag.ToLower() == "expiring"
-						? Visibility.Visible
-						: Visibility.Collapsed;
-				}
-			}
-
-			RaiseSearchRequested();
-		}
 
 		private void RaiseSearchRequested()
 		{
 			var mode = GetCurrentFilterMode();
-			var days = GetDaysFilter();
+			var days = _expiringDays;
 
 			SearchRequested?.Invoke(this, new DocumentSearchRequestedEventArgs(mode, days));
 		}
+
 
 		// ==============================
 		//   HANDLER SELEZIONE GRIGLIA
@@ -231,5 +183,6 @@ namespace DocWatcher.Wpf.Views
 			SelectedItem = DocumentsGrid.SelectedItem as DocumentRow;
 			SelectionChanged?.Invoke(this, EventArgs.Empty);
 		}
+
 	}
 }

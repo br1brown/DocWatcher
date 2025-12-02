@@ -53,6 +53,7 @@
         <TextBlock Grid.Row="0" Grid.ColumnSpan="2"
                Margin="0,0,0,16"
                FontSize="16" FontWeight="SemiBold"
+                   TextWrapping="Wrap"
                Text="{Binding Title, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
 
         <!-- SCADENZA -->
@@ -63,29 +64,35 @@
                Margin="0,0,0,8"
                Text="{Binding DueDate, RelativeSource={RelativeSource AncestorType=UserControl}, StringFormat='{}{0:dd/MM/yyyy}'}"/>
 
-        <!-- FILE -->
+        <!-- STATO -->
         <TextBlock Grid.Row="2" Grid.Column="0"
-               Text="File:" FontWeight="SemiBold"
+               Text="Stato:" FontWeight="SemiBold"
                Margin="0,0,16,8"/>
         <TextBlock Grid.Row="2" Grid.Column="1"
                Margin="0,0,0,8"
-               TextTrimming="CharacterEllipsis"
-               Text="{Binding FilePath, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+               Text="{Binding Status, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
+
+        <!-- FILE -->
+        <TextBlock x:Name="FileLabel"
+           Grid.Row="3" Grid.Column="0"
+           Text="File:" FontWeight="SemiBold"
+           Margin="0,0,16,8"/>
+        <TextBlock x:Name="FileTextBlock"
+           Grid.Row="3" Grid.Column="1"
+           Margin="0,0,0,8"
+           TextTrimming="CharacterEllipsis"
+                   TextWrapping="Wrap"
+           Text="{Binding FilePath, RelativeSource={RelativeSource AncestorType=UserControl}}" FontStyle="Italic" IsEnabled="False" Opacity="0.9"/>
 
         <!-- PULSANTE APRI FILE -->
-        <Button Grid.Row="3" Grid.Column="1"
-            Content="Apri file"
-            Style="{StaticResource PrimaryButtonStyle}"
-            Margin="0,0,0,16"
-            Click="OpenFile_Click"/>
+        <Button x:Name="OpenFileButton"
+        Grid.Row="4" Grid.Column="1"
+        Content="Apri file"
+        Style="{StaticResource PrimaryButtonStyle}"
+        Margin="0,0,0,16"
+        IsEnabled="False"
+        Click="OpenFile_Click"/>
 
-        <!-- STATO -->
-        <TextBlock Grid.Row="4" Grid.Column="0"
-               Text="Stato:" FontWeight="SemiBold"
-               Margin="0,0,16,8"/>
-        <TextBlock Grid.Row="4" Grid.Column="1"
-               Margin="0,0,0,8"
-               Text="{Binding Status, RelativeSource={RelativeSource AncestorType=UserControl}}"/>
 
         <!-- PULSANTI (spans both columns) -->
         <StackPanel Grid.Row="6" Grid.ColumnSpan="2"

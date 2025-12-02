@@ -26,9 +26,7 @@
                 <MenuItem Header="_Esporta CSV..."
                           Click="ExportCsv_Click"/>
             </MenuItem>
-            <MenuItem Header="_Impostazioni">
-                <MenuItem Header="_Notifiche..."
-                          Click="NotificationSettings_Click"/>
+            <MenuItem Header="_Impostazioni" Click="NotificationSettings_Click">
             </MenuItem>
         </Menu>
 

@@ -79,13 +79,6 @@ public partial class App : Application
 			}
 		}
 
-		// 7. Gestisci autostart
-		if (Config.BGStartup)
-		{
-			AutoStartHelper.EnsureAutoStart();
-		}
-
-		// 8. Mostra finestra principale
 		ShowMainWindow();
 	}
 
@@ -93,7 +86,7 @@ public partial class App : Application
 	{
 		try
 		{
-			return AppConfig.Load();
+			return AppConfig.Load(true);
 		}
 		catch (Exception ex)
 		{

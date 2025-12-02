@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace DocWatcher.Core.Models;
 
 public class Document

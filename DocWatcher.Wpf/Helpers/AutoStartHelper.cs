@@ -1,33 +1,51 @@
 ﻿using Microsoft.Win32;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace DocWatcher.Wpf.Helpers
+public static class AutoStartHelper
 {
-	public static class AutoStartHelper
+	private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
+	private const string AppName = "DocWatcher";
+
+	public static void EnsureAutoStart()
 	{
-		private const string RunKeyPath = @"Software\Microsoft\Windows\CurrentVersion\Run";
-		private const string AppName = "DocWatcher";
+#if DEBUG
+		// In debug non facciamo nulla, così non sporco il Run
+		return;
+#endif
+		using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
+		if (key is null)
+			return;
 
-		public static void EnsureAutoStart()
+		string exePath = Process.GetCurrentProcess().MainModule!.FileName!;
+		string value = $"\"{exePath}\" --background";
+		var current = key.GetValue(AppName) as string;
+
+		if (!string.Equals(current, value, StringComparison.OrdinalIgnoreCase))
 		{
-			using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
-			if (key is null)
-				return;
-
-			string exePath = Process.GetCurrentProcess().MainModule!.FileName!;
-			string value = $"\"{exePath}\" --background";
-
-			var current = key.GetValue(AppName) as string;
-
-			if (!string.Equals(current, value, StringComparison.OrdinalIgnoreCase))
-			{
-				key.SetValue(AppName, value);
-			}
+			key.SetValue(AppName, value);
 		}
+	}
+
+	public static void RemoveAutoStart()
+	{
+		using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: true);
+		if (key is null)
+			return;
+
+		var current = key.GetValue(AppName);
+		if (current is not null)
+		{
+			key.DeleteValue(AppName, throwOnMissingValue: false);
+		}
+	}
+
+	public static bool IsAutoStartEnabled()
+	{
+		using var key = Registry.CurrentUser.OpenSubKey(RunKeyPath, writable: false);
+		if (key is null)
+			return false;
+
+		return key.GetValue(AppName) is not null;
 	}
 }

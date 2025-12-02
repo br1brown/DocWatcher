@@ -1,6 +1,5 @@
 ﻿using DocWatcher.Core;
 using DocWatcher.Core.Dtos;
-using DocWatcher.Core.Services;
 using DocWatcher.Wpf.DTO;
 using DocWatcher.Wpf.Validation;
 using Microsoft.Win32;
@@ -103,6 +102,7 @@ namespace DocWatcher.Wpf.Views
 			}
 			else
 			{
+				btnElimina.Content = "Annulla";
 				TitleText = string.Empty;
 				DueDate = DateTime.Today;
 				FilePath = string.Empty;
@@ -241,6 +241,9 @@ namespace DocWatcher.Wpf.Views
 
 			if (dialog.ShowDialog(OwnerWindow) == true)
 			{
+				if (string.IsNullOrEmpty(TitleText))
+					TitleText = Path.GetFileNameWithoutExtension(dialog.FileName);
+
 				FilePath = dialog.FileName;
 			}
 		}

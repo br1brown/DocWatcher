@@ -1,5 +1,4 @@
 ﻿using DocWatcher.Core;
-using DocWatcher.Core.Models;
 using DocWatcher.Core.Dtos;
 using DocWatcher.Wpf.DTO;
 using Microsoft.Win32;
@@ -10,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 
 namespace DocWatcher.Wpf.Views;
 
@@ -34,18 +32,16 @@ public partial class MainWindow : Window
 		_documentController = App.DocumentController;
 		_config = App.Config;
 
-		_currentFilterDays = Math.Clamp(_config.NotifySpanDays, 1, 600);
+		_currentFilterDays = Math.Clamp(_config.FilterDays, 1, 600);
 
-		// Collego la grid ai dati
 		GridPanel.ItemsSource = _rows;
-		GridPanel.DefaultDaysFilter = _currentFilterDays;
+		GridPanel.CurrentDaysFilter = _currentFilterDays;
 
 		// Eventi dal pannello griglia
 		GridPanel.SearchRequested += GridPanel_SearchRequested;
 		GridPanel.SelectionChanged += GridPanel_SelectionChanged;
 
 		// Eventi dal pannello di view
-		ViewPanel.OpenFileRequested += ViewPanel_OpenFileRequested;
 		ViewPanel.EditRequested += ViewPanel_EditRequested;
 		ViewPanel.DeleteRequested += ViewPanel_DeleteRequested;
 
@@ -170,51 +166,6 @@ public partial class MainWindow : Window
 
 	#region Pannello View (DocumentViewPanel) eventi
 
-	private void ViewPanel_OpenFileRequested(object? sender, EventArgs e)
-	{
-		if (GridPanel.SelectedItem is not DocumentRow row)
-			return;
-
-		var doc = row.Document;
-
-		if (string.IsNullOrWhiteSpace(doc.PercorsoAllegato))
-		{
-			MessageBox.Show(this,
-				"Nessun percorso file associato.",
-				"Apri file",
-				MessageBoxButton.OK,
-				MessageBoxImage.Information);
-			return;
-		}
-
-		if (!File.Exists(doc.PercorsoAllegato))
-		{
-			MessageBox.Show(this,
-				"Il file indicato non esiste più sul file system.",
-				"Apri file",
-				MessageBoxButton.OK,
-				MessageBoxImage.Error);
-			return;
-		}
-
-		try
-		{
-			var psi = new System.Diagnostics.ProcessStartInfo
-			{
-				FileName = doc.PercorsoAllegato,
-				UseShellExecute = true
-			};
-			System.Diagnostics.Process.Start(psi);
-		}
-		catch (Exception ex)
-		{
-			MessageBox.Show(this,
-				$"Impossibile aprire il file:\n{ex.Message}",
-				"Errore",
-				MessageBoxButton.OK,
-				MessageBoxImage.Error);
-		}
-	}
 
 	private void ViewPanel_EditRequested(object? sender, EventArgs e)
 	{
@@ -279,12 +230,18 @@ public partial class MainWindow : Window
 
 	private void NotificationSettings_Click(object sender, RoutedEventArgs e)
 	{
-		MessageBox.Show(this,
-			"Impostazioni notifiche non ancora implementate.",
-			"Impostazioni",
-			MessageBoxButton.OK,
-			MessageBoxImage.Information);
+		var win = new SettingsWindow(_config)
+		{
+			Owner = this
+		};
+
+		if (win.ShowDialog() == true)
+		{
+			_currentFilterDays = _config.FilterDays;
+			GridPanel.CurrentDaysFilter = _currentFilterDays;
+		}
 	}
+
 
 	private async void ImportCsv_Click(object sender, RoutedEventArgs e)
 	{
