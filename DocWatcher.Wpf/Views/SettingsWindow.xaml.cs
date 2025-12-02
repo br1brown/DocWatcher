@@ -53,7 +53,7 @@ namespace DocWatcher.Wpf.Views
             border-radius: 4px;
             overflow-x: auto;
         }}
-        ul {{ margin-left: 20px; }}
+        ul {{ margin-left: 10px; }}
     </style>
 </head>
 <body>

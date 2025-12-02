@@ -88,8 +88,8 @@
                 </ScrollViewer>
             </TabItem>
 
-            <!-- =================== TAB 2: INFO =================== -->
-            <TabItem Header="Info">
+            <!-- =================== TAB 2: Guida =================== -->
+            <TabItem Header="Guida">
                 <Grid Margin="10">
                     <WebBrowser x:Name="BrowserInfo" />
                 </Grid>
