@@ -1,10 +1,12 @@
 ﻿using DocWatcher.Core;
 using DocWatcher.Core.Dtos;
 using DocWatcher.Wpf.DTO;
+using DocWatcher.Wpf.Helpers;
 using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,7 +23,7 @@ public partial class MainWindow : Window
 
 	private bool _isEditMode;
 	private bool _isLoading;
-	
+
 	private DocumentGridFilterMode _currentFilterMode = DocumentGridFilterMode.Expiring;
 	private int _currentFilterDays;
 
@@ -44,6 +46,7 @@ public partial class MainWindow : Window
 		// Eventi dal pannello di view
 		ViewPanel.EditRequested += ViewPanel_EditRequested;
 		ViewPanel.DeleteRequested += ViewPanel_DeleteRequested;
+		ViewPanel.OpenFileRequested += ViewPanel_OpenFileRequested;
 
 		// Evento dal pannello di edit
 		EditPanel.Completed += EditPanel_Completed;
@@ -57,7 +60,7 @@ public partial class MainWindow : Window
 	}
 
 	#region Caricamento / filtro
-	
+
 	private async void GridPanel_SearchRequested(object? sender, DocumentSearchRequestedEventArgs e)
 	{
 		_currentFilterMode = e.Mode;
@@ -88,7 +91,7 @@ public partial class MainWindow : Window
 		}
 		catch (Exception ex)
 		{
-			MessageBox.Show(this, ex.Message, "Errore", MessageBoxButton.OK, MessageBoxImage.Error);
+			ErrorHelper.Show(this, "Errore caricamento dati", ex);
 		}
 		finally
 		{
@@ -188,6 +191,30 @@ public partial class MainWindow : Window
 		await DeleteSelectedDocumentAsync();
 	}
 
+	private void ViewPanel_OpenFileRequested(object? sender, EventArgs e)
+	{
+		if (GridPanel.SelectedItem is not DocumentRow row)
+			return;
+
+		if (!string.IsNullOrWhiteSpace(row.PercorsoAllegato))
+		{
+			try
+			{
+				var psi = new ProcessStartInfo
+				{
+					FileName = row.PercorsoAllegato,
+					UseShellExecute = true,
+					Verb = "open"
+				};
+				Process.Start(psi);
+			}
+			catch (Exception ex)
+			{
+				ErrorHelper.Show(this, "Errore apertura file", ex);
+			}
+		}
+	}
+
 	#endregion
 
 	#region Pannello Edit (DocumentEditPanel) evento Completed
@@ -264,7 +291,7 @@ public partial class MainWindow : Window
 		}
 	}
 
-	private void ExportCsv_Click(object sender, RoutedEventArgs e)
+	private async void ExportCsv_Click(object sender, RoutedEventArgs e)
 	{
 		var dlg = new SaveFileDialog
 		{
@@ -274,19 +301,31 @@ public partial class MainWindow : Window
 
 		if (dlg.ShowDialog(this) == true)
 		{
-			using var writer = new StreamWriter(dlg.FileName);
-			writer.WriteLine("Id;Titolo;DataScadenza");
-
-			foreach (var row in _rows)
+			try
 			{
-				writer.WriteLine($"{row.Id};{row.Titolo};{row.DataScadenza:dd/MM/yyyy}");
-			}
+				var docs = await _documentController.GetAllAsync();
+				using var writer = new StreamWriter(dlg.FileName);
+				const char separator = ';';
+				writer.WriteLine(string.Join(separator, "Titolo", "DataScadenza", "PercorsoAllegato"));
 
-			MessageBox.Show(this,
-				"Esportazione completata.",
-				"Esporta CSV",
-				MessageBoxButton.OK,
-				MessageBoxImage.Information);
+				foreach (var doc in docs)
+				{
+					var titolo = CsvImporter.EscapeCsv(doc.Titolo, separator);
+					var data = CsvImporter.EscapeCsv(doc.DataScadenza.ToString("dd/MM/yyyy"), separator);
+					var path = CsvImporter.EscapeCsv(doc.PercorsoAllegato, separator);
+					writer.WriteLine($"{titolo}{separator}{data}{separator}{path}");
+				}
+
+				MessageBox.Show(this,
+					"Esportazione completata.",
+					"Esporta CSV",
+					MessageBoxButton.OK,
+					MessageBoxImage.Information);
+			}
+			catch (Exception ex)
+			{
+				ErrorHelper.Show(this, "Errore esportazione CSV", ex);
+			}
 		}
 	}
 
@@ -308,7 +347,15 @@ public partial class MainWindow : Window
 		if (res != MessageBoxResult.Yes)
 			return;
 
-		await _documentController.DeleteAsync(row.Id);
+		try
+		{
+			await _documentController.DeleteAsync(row.Id);
+		}
+		catch (Exception ex)
+		{
+			ErrorHelper.Show(this, "Errore eliminazione documento", ex);
+			return;
+		}
 
 		MessageBox.Show(this,
 			"Documento eliminato.",

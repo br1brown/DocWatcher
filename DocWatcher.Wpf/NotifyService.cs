@@ -1,7 +1,10 @@
-﻿using CommunityToolkit.WinUI.Notifications;
+using CommunityToolkit.WinUI.Notifications;
 using DocWatcher.Core;
+using System;
+using System.IO;
 using System.Linq;
-using System.Threading.Tasks; 
+using System.Threading.Tasks;
+using System.Windows;
 
 namespace DocWatcher.Wpf;
 
@@ -28,12 +31,11 @@ public class NotifyService
 
 	private void ShowNotification(int count)
 	{
-		int giorni = _config.FilterDays;
+		int giorni = _config.NotifySpanDays;
 
 		new ToastContentBuilder()
-			//.AddAudio()
-			.AddText("DocWatcher")
 			.AddText($"Ci sono {count} documenti che scadono entro {giorni} giorni.")
+			//.AddAppLogoOverride(new Uri("Resources/asset/ICO.png", UriKind.Relative))
 			.Show();
 	}
 }

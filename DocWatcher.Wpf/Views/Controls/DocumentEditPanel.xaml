@@ -27,6 +27,8 @@
             <Setter Property="Foreground" Value="White"/>
         </Style>
 
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+
     </UserControl.Resources>
 
     <Grid Margin="0">
@@ -36,6 +38,8 @@
             <!-- Scadenza -->
             <RowDefinition Height="Auto"/>
             <!-- Percorso file -->
+            <RowDefinition Height="Auto"/>
+            <!-- Rimuovi allegato -->
             <RowDefinition Height="Auto"/>
             <!-- Spazio vuoto -->
             <RowDefinition Height="*"/>
@@ -101,8 +105,19 @@
                 Style="{StaticResource PrimaryButtonStyle}"
                 Click="Browse_Click"/>
 
+        <Button Grid.Row="3"
+                Grid.ColumnSpan="2"
+                Margin="60,0,10,4"
+                HorizontalAlignment="Stretch"
+                Content="Rimuovi allegato"
+                Style="{StaticResource PrimaryButtonStyle}"
+                Click="ClearFilePath_Click"
+                Visibility="{Binding HasFilePath,
+                                     RelativeSource={RelativeSource AncestorType=UserControl},
+                                     Converter={StaticResource BoolToVisibility}}"/>
+
         <!-- Pulsanti -->
-        <DockPanel Grid.Row="4"
+        <DockPanel Grid.Row="5"
                    Grid.Column="0"
                    Grid.ColumnSpan="3"
                    Margin="0,8,0,0">

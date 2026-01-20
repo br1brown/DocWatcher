@@ -1,6 +1,7 @@
-using CommunityToolkit.WinUI.Notifications;
+﻿using CommunityToolkit.WinUI.Notifications;
 using DocWatcher.Core;
 using DocWatcher.Core.Data;
+using DocWatcher.Core.Services;
 using DocWatcher.Wpf.Helpers;
 using DocWatcher.Wpf.Views;
 using System;
@@ -26,6 +27,8 @@ public partial class App : Application
 	protected override async void OnStartup(StartupEventArgs e)
 	{
 		base.OnStartup(e);
+
+		LogHelper.CleanupOldLogs(7);
 
 		try
 		{
@@ -161,8 +164,9 @@ public partial class App : Application
 				break;
 			}
 		}
-		catch
+		catch (Exception ex)
 		{
+			LogHelper.Log(ex, "App.ActivateExistingInstance");
 			// Se fallisce, non è grave: semplicemente non attiviamo la finestra
 		}
 	}

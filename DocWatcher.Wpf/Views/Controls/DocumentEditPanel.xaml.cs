@@ -1,6 +1,7 @@
 ﻿using DocWatcher.Core;
 using DocWatcher.Core.Dtos;
 using DocWatcher.Wpf.DTO;
+using DocWatcher.Wpf.Helpers;
 using DocWatcher.Wpf.Validation;
 using Microsoft.Win32;
 using System;
@@ -102,7 +103,7 @@ namespace DocWatcher.Wpf.Views
 			}
 			else
 			{
-				btnElimina.Content = "Annulla";
+				btnElimina.Visibility = Visibility.Collapsed;
 				TitleText = string.Empty;
 				DueDate = DateTime.Today;
 				FilePath = string.Empty;
@@ -152,11 +153,20 @@ namespace DocWatcher.Wpf.Views
 				// MODIFICA DOCUMENTO ESISTENTE
 				_document.Titolo = input.Titolo!.Trim();
 				_document.DataScadenza = input.DataScadenza!.Value.Date;
+				// Vuoto => stringa vuota per indicare "cancella" al controller
 				_document.PercorsoAllegato = string.IsNullOrWhiteSpace(input.PercorsoAllegato)
-					? null
+					? string.Empty
 					: input.PercorsoAllegato.Trim();
 
-				await _documentController.UpdateAsync(_document);
+				try
+				{
+					await _documentController.UpdateAsync(_document);
+				}
+				catch (Exception ex)
+				{
+					ErrorHelper.Show(OwnerWindow, "Errore salvataggio documento", ex);
+					return;
+				}
 
 				MessageBox.Show(OwnerWindow,
 					"Documento aggiornato.",
@@ -176,7 +186,15 @@ namespace DocWatcher.Wpf.Views
 						: input.PercorsoAllegato.Trim()
 				};
 
-				await _documentController.CreateAsync(newDoc);
+				try
+				{
+					await _documentController.CreateAsync(newDoc);
+				}
+				catch (Exception ex)
+				{
+					ErrorHelper.Show(OwnerWindow, "Errore creazione documento", ex);
+					return;
+				}
 
 				_document = newDoc;
 				_isEdit = true;
@@ -217,7 +235,15 @@ namespace DocWatcher.Wpf.Views
 			if (result != MessageBoxResult.Yes)
 				return;
 
-			await _documentController.DeleteAsync(_document.Id.Value);
+			try
+			{
+				await _documentController.DeleteAsync(_document.Id.Value);
+			}
+			catch (Exception ex)
+			{
+				ErrorHelper.Show(OwnerWindow, "Errore eliminazione documento", ex);
+				return;
+			}
 
 			MessageBox.Show(OwnerWindow,
 				"Documento eliminato.",
@@ -247,5 +273,10 @@ namespace DocWatcher.Wpf.Views
 				FilePath = dialog.FileName;
 			}
 		}
-	}
+
+		private void ClearFilePath_Click(object sender, RoutedEventArgs e)
+		{
+			FilePath = string.Empty;
+		}
+    }
 }

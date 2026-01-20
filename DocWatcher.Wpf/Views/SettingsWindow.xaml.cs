@@ -1,5 +1,6 @@
 ﻿using DocWatcher.Wpf; // per AppConfig
 using System;
+using DocWatcher.Wpf.Helpers;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -22,13 +23,17 @@ namespace DocWatcher.Wpf.Views
 
 		private void LoadMarkdown()
 		{
-			var uri = new Uri("Resources/manuale.md", UriKind.Relative);
-			var info = Application.GetResourceStream(uri);
+			try
+			{
+				var uri = new Uri("Resources/manuale.md", UriKind.Relative);
+				var info = Application.GetResourceStream(uri);
+				if (info is null)
+					throw new FileNotFoundException("manuale.md non trovato nelle risorse.");
 
-			using var reader = new StreamReader(info.Stream);
-			var md = reader.ReadToEnd();
-			var htmlBody = Markdig.Markdown.ToHtml(md);
-			string fullHtml = $@"
+				using var reader = new StreamReader(info.Stream);
+				var md = reader.ReadToEnd();
+				var htmlBody = Markdig.Markdown.ToHtml(md);
+				string fullHtml = $@"
 <html>
 <head>
     <meta charset='UTF-8'>
@@ -60,6 +65,11 @@ namespace DocWatcher.Wpf.Views
 {htmlBody}
 </body>
 </html>"; BrowserInfo.NavigateToString(fullHtml);
+			}
+			catch (Exception ex)
+			{
+				ErrorHelper.Show(this, "Errore caricamento guida", ex);
+			}
 		}
 
 		private void InitializeControlsFromConfig()
@@ -113,7 +123,15 @@ namespace DocWatcher.Wpf.Views
 			_config.NotifyAlwaysOnStartup = ChkNotifyAlwaysOnStartup.IsChecked == true;
 			_config.BGStartup = ChkBGStartup.IsChecked == true;
 
-			_config.SaveApply();
+			try
+			{
+				_config.SaveApply();
+			}
+			catch (Exception ex)
+			{
+				ErrorHelper.Show(this, "Errore salvataggio impostazioni", ex);
+				return;
+			}
 
 			// Chiudo con DialogResult = true nel caso il chiamante voglia reagire
 			DialogResult = true;

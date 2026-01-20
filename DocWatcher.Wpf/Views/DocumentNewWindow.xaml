@@ -9,7 +9,7 @@
         Height="260"
         Width="520"
         WindowStartupLocation="CenterOwner"
-        ResizeMode="NoResize">
+        ResizeMode="NoResize" Icon="/Resources/asset/favicon.ico">
 
     <Grid Margin="12">
         <views:DocumentEditPanel x:Name="EditPanel"

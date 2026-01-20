@@ -38,29 +38,32 @@ public class DocumentController
 	// =========================
 
 	public async Task<List<DocumentDto>> GetAllAsync()
-	{
-		var docs = await _documentService.GetAllDocumentsAsync().ConfigureAwait(false);
-		return docs.Select(ToDto).ToList();
-	}
+		=> await RunLoggedAsync(async () =>
+		{
+			var docs = await _documentService.GetAllDocumentsAsync().ConfigureAwait(false);
+			return docs.Select(ToDto).ToList();
+		}, "DocumentController.GetAllAsync").ConfigureAwait(false);
 
 	public async Task<List<DocumentDto>> GetExpiringAsync(int days)
-	{
-		var docs = await _documentService.GetDocumentiInScadenzaAsync(days, DateTime.Today).ConfigureAwait(false);
-		return docs.Select(ToDto).ToList();
-	}
+		=> await RunLoggedAsync(async () =>
+		{
+			var docs = await _documentService.GetDocumentiInScadenzaAsync(days, DateTime.Today).ConfigureAwait(false);
+			return docs.Select(ToDto).ToList();
+		}, "DocumentController.GetExpiringAsync").ConfigureAwait(false);
 	public async Task<int> GetNumExpiringAsync(int days)
-	{
-		return await _documentService.GetNumInScadenzaAsync(days, DateTime.Today).ConfigureAwait(false);
-	}
+		=> await RunLoggedAsync(
+			() => _documentService.GetNumInScadenzaAsync(days, DateTime.Today),
+			"DocumentController.GetNumExpiringAsync").ConfigureAwait(false);
 
 	public async Task<List<DocumentDto>> GetExpiredAsync()
-	{
-		var docs = await _documentService.GetDocumentiScadutiAsync().ConfigureAwait(false);
-		return docs.Select(ToDto).ToList();
-	}
+		=> await RunLoggedAsync(async () =>
+		{
+			var docs = await _documentService.GetDocumentiScadutiAsync().ConfigureAwait(false);
+			return docs.Select(ToDto).ToList();
+		}, "DocumentController.GetExpiredAsync").ConfigureAwait(false);
 
 	public Task<Document?> GetByIdAsync(int id)
-		=> _documentService.GetByIdAsync(id);
+		=> RunLoggedAsync(() => _documentService.GetByIdAsync(id), "DocumentController.GetByIdAsync");
 
 	// =========================
 	//   SCRITTURA
@@ -81,7 +84,9 @@ public class DocumentController
 				: dto.PercorsoAllegato.Trim()
 		};
 
-		await _documentService.InsertAsync(entity).ConfigureAwait(false);
+		await RunLoggedAsync(
+			() => _documentService.InsertAsync(entity),
+			"DocumentController.CreateAsync").ConfigureAwait(false);
 		return entity;
 	}
 
@@ -94,11 +99,13 @@ public class DocumentController
 			throw new KeyNotFoundException($"Documento con Id={dto.Id.Value} non trovato.");
 
 		ApplyToEntity(existing, dto);
-		await _documentService.UpdateAsync(existing).ConfigureAwait(false);
+		await RunLoggedAsync(
+			() => _documentService.UpdateAsync(existing),
+			"DocumentController.UpdateAsync").ConfigureAwait(false);
 	}
 
 	public Task DeleteAsync(int id)
-		=> _documentService.DeleteAsync(id);
+		=> RunLoggedAsync(() => _documentService.DeleteAsync(id), "DocumentController.DeleteAsync");
 
 	/// <summary>
 	/// Import massivo da DTO (es. CSV in uno scenario API/batch).
@@ -122,6 +129,34 @@ public class DocumentController
 		if (docs.Count == 0)
 			return 0;
 
-		return await _documentService.BulkInsertAsync(docs).ConfigureAwait(false);
+		return await RunLoggedAsync(
+			() => _documentService.BulkInsertAsync(docs),
+			"DocumentController.BulkImportAsync").ConfigureAwait(false);
+	}
+
+	private static async Task<T> RunLoggedAsync<T>(Func<Task<T>> action, string context)
+	{
+		try
+		{
+			return await action().ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			LogHelper.Log(ex, context);
+			throw;
+		}
+	}
+
+	private static async Task RunLoggedAsync(Func<Task> action, string context)
+	{
+		try
+		{
+			await action().ConfigureAwait(false);
+		}
+		catch (Exception ex)
+		{
+			LogHelper.Log(ex, context);
+			throw;
+		}
 	}
 }

@@ -4,6 +4,9 @@
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>Resources/asset/favicon.ico</ApplicationIcon>
+    <AssemblyName>Doc Watcher</AssemblyName>
+    <StartupObject>DocWatcher.Wpf.App</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.1.2" />
@@ -16,10 +19,18 @@
 
   <ItemGroup>
     <None Remove="Resources\manuale.md" />
+    <None Remove="Resources\asset\favicon.ico" />
+    <None Remove="Resources\asset\ICO.png" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Resources\manuale.md">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\asset\favicon.ico">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\asset\ICO.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
   </ItemGroup>

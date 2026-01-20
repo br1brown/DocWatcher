@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Importa CSV"
-        Width="420" Height="300">
+        Width="420" Height="300" Icon="/Resources/asset/favicon.ico">
     <StackPanel Margin="12" VerticalAlignment="Top">
         <TextBlock Text="Mappa le colonne del CSV ai campi del documento:"/>
 

@@ -1,3 +1,4 @@
+using DocWatcher.Core.Services;
 using System;
 using System.IO;
 using System.Text.Json;
@@ -19,6 +20,8 @@ public class AppConfig
 			{
 				var json = File.ReadAllText(FullPath());
 				var ret = JsonSerializer.Deserialize<AppConfig>(json) ?? new AppConfig();
+				ret.NotifySpanDays = Math.Clamp(ret.NotifySpanDays, 1, 600);
+				ret.FilterDays = Math.Clamp(ret.FilterDays, 1, 600);
 				ret.BGStartup = AutoStartHelper.IsAutoStartEnabled();
 
 				if (apply)
@@ -27,9 +30,9 @@ public class AppConfig
 				return ret;
 			}
 		}
-		catch
+		catch (Exception ex)
 		{
-			// Ignore errors and use default
+			LogHelper.Log(ex, "AppConfig.Load");
 		}
 
 		return new AppConfig();
@@ -61,11 +64,19 @@ public class AppConfig
 
 	private void Save()
 	{
-		var json = JsonSerializer.Serialize(this, new JsonSerializerOptions
+		try
 		{
-			WriteIndented = true
-		});
-		File.WriteAllText(FullPath(), json);
+			var json = JsonSerializer.Serialize(this, new JsonSerializerOptions
+			{
+				WriteIndented = true
+			});
+			File.WriteAllText(FullPath(), json);
+		}
+		catch (Exception ex)
+		{
+			LogHelper.Log(ex, "AppConfig.Save");
+			throw;
+		}
 	}
 
 	private static string FullPath()

@@ -1,5 +1,6 @@
 ﻿using DocWatcher.Core;
 using DocWatcher.Core.Dtos;
+using DocWatcher.Core.Services;
 using System;
 using System.Windows;
 
@@ -55,7 +56,10 @@ public partial class DocumentNewWindow : Window
 		{
 			DialogResult = e.Result != DocumentEditResult.Canceled;
 		}
-		catch { }
+		catch (Exception ex)
+		{
+			LogHelper.Log(ex, "DocumentNewWindow.EditPanel_Completed");
+		}
 		Close();
 	}
 }

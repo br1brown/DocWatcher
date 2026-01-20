@@ -1,20 +1,37 @@
 # DocWatcher
 
-DocWatcher è un piccolo progetto desktop (versione **0.5**, in sviluppo) pensato per tenere traccia di documenti con **data di scadenza** e, opzionalmente, un **file associato** sul disco.
+DocWatcher e' un'app desktop per tenere traccia di documenti con data di scadenza e, opzionalmente, un file associato.
 
-> ⚠️ Questa è una **prima versione funzionante** usata principalmente come backup e base di partenza per evoluzioni future:
-> - UI ancora provvisoria / da migliorare
-> - niente test automatizzati
-> - in futuro possibile integrazione con database diversi o import da Excel
+## Funzionalita'
 
-## Stato del progetto
-
-- ✅ Notifiche
-- 🚧 Codice e architettura ancora in fase di pulizia
-- 🚧 UI da rifinire
-- 🚧 Test da fare
+- Gestione documenti (crea, modifica, elimina)
+- Filtri per scadenza (in scadenza / scaduti / tutti)
+- Import/export CSV
+- Notifiche Windows con range configurabile
+- Avvio in background all'accensione (opzionale)
 
 ## Requisiti
 
-- .NET (versione usata dal progetto, es. .NET 8)
-- Windows (versione minima che supporta il progetto)
+- .NET (versione del progetto, es. .NET 8)
+- Windows 10/11
+
+## Avvio
+
+Apri la soluzione e avvia `DocWatcher.Wpf`. Alla prima esecuzione il database viene creato in automatico.
+
+## Percorsi e dati
+
+- Database SQLite: `%LOCALAPPDATA%\\DocWatcher\\Data\\docwatcher.db`
+- Config: `%LOCALAPPDATA%\\docwatcher.config.json`
+- Log: `%LOCALAPPDATA%\\DocWatcher\\log-YYYYMMDD.txt` (pulizia automatica > 7 giorni all'avvio)
+
+## CSV
+
+- Separatore supportato: `;` o `,`
+- Campi: `Titolo`, `DataScadenza`, `PercorsoAllegato` (opzionale)
+- Formati data: `dd/MM/yyyy`, `d/M/yyyy`, `yyyy-MM-dd`
+
+## Note
+
+- Il filtro della griglia e le notifiche hanno range separati (configurabili da Impostazioni).
+- Il manuale utente e' incluso come risorsa nella UI (tab "Guida").
