@@ -7,6 +7,9 @@
     <ApplicationIcon>Resources/asset/favicon.ico</ApplicationIcon>
     <AssemblyName>Doc Watcher</AssemblyName>
     <StartupObject>DocWatcher.Wpf.App</StartupObject>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.WinUI.Notifications" Version="7.1.2" />
