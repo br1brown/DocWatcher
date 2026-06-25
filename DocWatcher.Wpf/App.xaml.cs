@@ -1,9 +1,11 @@
-﻿using CommunityToolkit.WinUI.Notifications;
+using CommunityToolkit.WinUI.Notifications;
 using DocWatcher.Core;
 using DocWatcher.Core.Data;
 using DocWatcher.Core.Services;
-using DocWatcher.Wpf.Helpers;
 using DocWatcher.Wpf.Views;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -11,18 +13,46 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using Velopack;
+using Velopack.Sources;
 
 namespace DocWatcher.Wpf;
 
 public partial class App : Application
 {
-	// Dependency container o service locator pattern sarebbe meglio
+	private readonly IHost _host;
+
+	// Bridge statico verso il container DI: usato dalle View (es. MainWindow)
+	// che vengono istanziate da WPF e non ricevono i servizi via costruttore.
 	public static DocumentController DocumentController { get; private set; } = null!;
 	public static AppConfig Config { get; private set; } = null!;
 
-	private DocWatcherContext? _dbContext;
 	private Mutex? _singleInstanceMutex;
 	private NotifyService? _notifyService;
+
+	// Repository GitHub usato per il controllo degli aggiornamenti (Velopack).
+	private const string GithubRepoUrl = "https://github.com/br1brown/DocWatcher";
+
+	public App()
+	{
+		// DEVE essere la prima cosa eseguita: gestisce gli hook di
+		// installazione/aggiornamento/disinstallazione di Velopack.
+		VelopackApp.Build().Run();
+
+		_host = Host.CreateDefaultBuilder()
+			.ConfigureServices((_, services) =>
+			{
+				// IDbContextFactory + DocumentService + DocumentController
+				services.AddDocWatcherCore();
+
+				// Configurazione applicativa (caricata e applicata all'avvio)
+				services.AddSingleton(_ => AppConfig.Load(true));
+
+				// Servizio notifiche
+				services.AddSingleton<NotifyService>();
+			})
+			.Build();
+	}
 
 	protected override async void OnStartup(StartupEventArgs e)
 	{
@@ -32,6 +62,7 @@ public partial class App : Application
 
 		try
 		{
+			await _host.StartAsync();
 			await InitializeApplicationAsync(e);
 		}
 		catch (Exception ex)
@@ -48,20 +79,18 @@ public partial class App : Application
 
 	private async Task InitializeApplicationAsync(StartupEventArgs e)
 	{
-		// 1. Carica configurazione
-		Config = LoadConfiguration();
+		// 1. Risolvi i servizi dal container
+		Config = _host.Services.GetRequiredService<AppConfig>();
+		DocumentController = _host.Services.GetRequiredService<DocumentController>();
+		_notifyService = _host.Services.GetRequiredService<NotifyService>();
 
-		// 2. Inizializza database
-		_dbContext = InitializeDatabase();
+		// 2. Applica le migrazioni del database (crea/aggiorna lo schema)
+		await InitializeDatabaseAsync();
 
-		// 3. Inizializza servizi
-		DocumentController = new DocumentController(_dbContext);
-		_notifyService = new NotifyService(DocumentController, Config);
-
-		// 4. Gestisci argomenti
+		// 3. Gestisci argomenti
 		var args = ParseCommandLineArgs(e.Args);
 
-		// 5. Gestisci single instance (se non in background)
+		// 4. Gestisci single instance (se non in background)
 		if (!args.IsBackground && !EnsureSingleInstance())
 		{
 			ActivateExistingInstance();
@@ -69,7 +98,7 @@ public partial class App : Application
 			return;
 		}
 
-		// 6. Gestisci notifiche
+		// 5. Gestisci notifiche
 		if (args.IsBackground || Config.NotifyAlwaysOnStartup)
 		{
 			ToastNotificationManagerCompat.OnActivated += Toast_OnActivated;
@@ -82,29 +111,48 @@ public partial class App : Application
 			}
 		}
 
+		// Controlla gli aggiornamenti in background (non blocca l'avvio).
+		_ = CheckForUpdatesAsync();
+
 		ShowMainWindow();
 	}
 
-	private static AppConfig LoadConfiguration()
+	/// <summary>
+	/// Cerca aggiornamenti sulle GitHub Releases tramite Velopack.
+	/// Se presenti, li scarica e li applica al prossimo riavvio
+	/// (senza interrompere la sessione corrente). No-op se l'app non e'
+	/// stata installata tramite Velopack (es. esecuzione da Visual Studio).
+	/// </summary>
+	private static async Task CheckForUpdatesAsync()
 	{
 		try
 		{
-			return AppConfig.Load(true);
+			var mgr = new UpdateManager(new GithubSource(GithubRepoUrl, accessToken: null, prerelease: false));
+
+			if (!mgr.IsInstalled)
+				return;
+
+			var newVersion = await mgr.CheckForUpdatesAsync();
+			if (newVersion is null)
+				return;
+
+			await mgr.DownloadUpdatesAsync(newVersion);
+			mgr.WaitExitThenApplyUpdates(newVersion);
 		}
 		catch (Exception ex)
 		{
-			throw new InvalidOperationException(
-				"Impossibile caricare la configurazione", ex);
+			// Un errore di rete non deve compromettere l'avvio dell'app.
+			LogHelper.Log(ex, "App.CheckForUpdatesAsync");
 		}
 	}
 
-	private static DocWatcherContext InitializeDatabase()
+	private async Task InitializeDatabaseAsync()
 	{
 		try
 		{
-			var context = new DocWatcherContext();
-			context.Database.EnsureCreated();
-			return context;
+			var factory = _host.Services.GetRequiredService<IDbContextFactory<DocWatcherContext>>();
+			await using var context = await factory.CreateDbContextAsync();
+			await context.Database.MigrateAsync();
 		}
 		catch (Exception ex)
 		{
@@ -121,20 +169,15 @@ public partial class App : Application
 			IsBackground = normalized.Contains("--background")
 		};
 	}
+
 	private bool EnsureSingleInstance()
 	{
-		bool createdNew;
 		_singleInstanceMutex = new Mutex(
 			true,
 			"DocWatcher_Wpf_SingleInstance",
-			out createdNew);
+			out var createdNew);
 
-		if (!createdNew)
-		{
-			return false;
-		}
-
-		return true;
+		return createdNew;
 	}
 
 	private static void ActivateExistingInstance()
@@ -231,15 +274,27 @@ public partial class App : Application
 		window.Focus();
 	}
 
-	protected override void OnExit(ExitEventArgs e)
+	protected override async void OnExit(ExitEventArgs e)
 	{
 		// Rimuovi event handler per evitare memory leak
 		ToastNotificationManagerCompat.OnActivated -= Toast_OnActivated;
 
-		// Rilascia risorse
-		_dbContext?.Dispose();
-		_singleInstanceMutex?.ReleaseMutex();
+		// Rilascia il mutex single-instance (solo se posseduto da questo thread)
+		try
+		{
+			_singleInstanceMutex?.ReleaseMutex();
+		}
+		catch (ApplicationException)
+		{
+			// Il mutex non era posseduto da questo thread: niente da fare.
+		}
 		_singleInstanceMutex?.Dispose();
+
+		// Arresta l'host e rilascia tutti i servizi (incluso il DbContextFactory)
+		using (_host)
+		{
+			await _host.StopAsync(TimeSpan.FromSeconds(2));
+		}
 
 		base.OnExit(e);
 	}

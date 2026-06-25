@@ -47,59 +47,75 @@ internal static class DocumentQueryExtensions
 	}
 }
 
-internal class DocumentService
+public class DocumentService
 {
-	private readonly DocWatcherContext _context;
+	private readonly IDbContextFactory<DocWatcherContext> _contextFactory;
 
-	public DocumentService(DocWatcherContext context)
+	public DocumentService(IDbContextFactory<DocWatcherContext> contextFactory)
 	{
-		_context = context ?? throw new ArgumentNullException(nameof(context));
+		_contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
 	}
-
-	/// <summary>
-	/// Query di base componibile su Documents.
-	/// Tutte le query partono da qui.
-	/// </summary>
-	private IQueryable<Document> BaseQuery => _context.Documents.AsQueryable();
 
 	/// <summary>
 	/// Restituisce tutti i documenti ordinati per data di scadenza.
 	/// </summary>
-	public Task<List<Document>> GetAllDocumentsAsync()
-		=> BaseQuery
+	public async Task<List<Document>> GetAllDocumentsAsync()
+	{
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		return await context.Documents
 			.OrdinatiPerScadenza()
-			.ToListAsync();
+			.ToListAsync()
+			.ConfigureAwait(false);
+	}
 
 	/// <summary>
 	/// Restituisce i documenti che scadono entro "days" giorni da partenza (incluso).
 	/// </summary>
-	public Task<List<Document>> GetDocumentiInScadenzaAsync(int days, DateTime partenza)
-	=> BaseQuery
+	public async Task<List<Document>> GetDocumentiInScadenzaAsync(int days, DateTime partenza)
+	{
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		return await context.Documents
 			.InScadenzaEntro(days, partenza)
 			.OrdinatiPerScadenza()
-			.ToListAsync();
+			.ToListAsync()
+			.ConfigureAwait(false);
+	}
+
 	/// <summary>
 	/// Restituisce il numero di documenti che scadono entro "days" giorni da partenza (incluso).
 	/// </summary>
-	public Task<int> GetNumInScadenzaAsync(int days, DateTime partenza)
-	=> BaseQuery
-			.InScadenzaEntro(days, partenza).CountAsync();
-
+	public async Task<int> GetNumInScadenzaAsync(int days, DateTime partenza)
+	{
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		return await context.Documents
+			.InScadenzaEntro(days, partenza)
+			.CountAsync()
+			.ConfigureAwait(false);
+	}
 
 	/// <summary>
 	/// Restituisce i documenti già scaduti (data &lt; oggi).
 	/// </summary>
-	public Task<List<Document>> GetDocumentiScadutiAsync()
-	=> BaseQuery
+	public async Task<List<Document>> GetDocumentiScadutiAsync()
+	{
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		return await context.Documents
 			.ScadutiPrimaDi(DateTime.Today)
 			.OrdinatiPerScadenza()
-			.ToListAsync();
+			.ToListAsync()
+			.ConfigureAwait(false);
+	}
 
 	/// <summary>
 	/// Restituisce un documento per Id, oppure null se non esiste.
 	/// </summary>
-	public Task<Document?> GetByIdAsync(int id)
-		=> BaseQuery.FirstOrDefaultAsync(d => d.Id == id);
+	public async Task<Document?> GetByIdAsync(int id)
+	{
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		return await context.Documents
+			.FirstOrDefaultAsync(d => d.Id == id)
+			.ConfigureAwait(false);
+	}
 
 	/// <summary>
 	/// Inserisce un nuovo documento.
@@ -108,8 +124,9 @@ internal class DocumentService
 	{
 		if (document == null) throw new ArgumentNullException(nameof(document));
 
-		_context.Documents.Add(document);
-		await _context.SaveChangesAsync().ConfigureAwait(false);
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		context.Documents.Add(document);
+		await context.SaveChangesAsync().ConfigureAwait(false);
 	}
 
 	/// <summary>
@@ -123,8 +140,9 @@ internal class DocumentService
 		if (list.Count == 0)
 			return 0;
 
-		_context.Documents.AddRange(list);
-		await _context.SaveChangesAsync().ConfigureAwait(false);
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		context.Documents.AddRange(list);
+		await context.SaveChangesAsync().ConfigureAwait(false);
 
 		return list.Count;
 	}
@@ -136,8 +154,9 @@ internal class DocumentService
 	{
 		if (document == null) throw new ArgumentNullException(nameof(document));
 
-		_context.Documents.Update(document);
-		await _context.SaveChangesAsync().ConfigureAwait(false);
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		context.Documents.Update(document);
+		await context.SaveChangesAsync().ConfigureAwait(false);
 	}
 
 	/// <summary>
@@ -145,11 +164,12 @@ internal class DocumentService
 	/// </summary>
 	public async Task DeleteAsync(int id)
 	{
-		var doc = await _context.Documents.FindAsync(id).ConfigureAwait(false);
+		await using var context = await _contextFactory.CreateDbContextAsync().ConfigureAwait(false);
+		var doc = await context.Documents.FindAsync(id).ConfigureAwait(false);
 		if (doc is null)
 			return;
 
-		_context.Documents.Remove(doc);
-		await _context.SaveChangesAsync().ConfigureAwait(false);
+		context.Documents.Remove(doc);
+		await context.SaveChangesAsync().ConfigureAwait(false);
 	}
 }

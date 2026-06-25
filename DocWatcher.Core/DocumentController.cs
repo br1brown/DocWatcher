@@ -9,9 +9,9 @@ public class DocumentController
 {
 	private readonly DocumentService _documentService;
 
-	public DocumentController(DocWatcherContext context)
+	public DocumentController(DocumentService documentService)
 	{
-		_documentService = new DocumentService(context);
+		_documentService = documentService ?? throw new ArgumentNullException(nameof(documentService));
 	}
 
 	private static DocumentDto ToDto(Document d) => new()
@@ -93,10 +93,13 @@ public class DocumentController
 	public async Task UpdateAsync(DocumentDto dto)
 	{
 		if (dto is null) throw new ArgumentNullException(nameof(dto));
+		if (dto.Id is null)
+			throw new ArgumentException("Id obbligatorio per l'aggiornamento.", nameof(dto));
 
-		var existing = await _documentService.GetByIdAsync(dto.Id.Value).ConfigureAwait(false);
+		var id = dto.Id.Value;
+		var existing = await _documentService.GetByIdAsync(id).ConfigureAwait(false);
 		if (existing is null)
-			throw new KeyNotFoundException($"Documento con Id={dto.Id.Value} non trovato.");
+			throw new KeyNotFoundException($"Documento con Id={id} non trovato.");
 
 		ApplyToEntity(existing, dto);
 		await RunLoggedAsync(

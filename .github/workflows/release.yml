@@ -1,0 +1,64 @@
+name: Release
+
+# Pubblica una nuova versione quando viene creato un tag tipo v1.2.3
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Determine version from tag
+        id: version
+        shell: bash
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Test
+        run: dotnet test -c Release --verbosity normal
+
+      - name: Publish WPF (self-contained, win-x64)
+        run: >
+          dotnet publish DocWatcher.Wpf/DocWatcher.Wpf.csproj
+          -c Release
+          -r win-x64
+          --self-contained true
+          -p:Version=${{ steps.version.outputs.version }}
+          -o publish
+
+      - name: Install Velopack CLI (vpk)
+        run: dotnet tool install -g vpk --version 1.2.0
+
+      - name: Package installer + delta (Velopack)
+        run: >
+          vpk pack
+          --packId DocWatcher
+          --packTitle "Doc Watcher"
+          --packVersion ${{ steps.version.outputs.version }}
+          --packDir publish
+          --mainExe "Doc Watcher.exe"
+
+      - name: Upload to GitHub Release (Velopack)
+        run: >
+          vpk upload github
+          --repoUrl https://github.com/br1brown/DocWatcher
+          --publish
+          --releaseName "Doc Watcher ${{ steps.version.outputs.version }}"
+          --tag ${{ github.ref_name }}
+          --token ${{ secrets.GITHUB_TOKEN }}
